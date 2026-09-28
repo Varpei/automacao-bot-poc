@@ -1,0 +1,14 @@
+# Segredos e configurações locais
+.env
+.env.*
+!.env.example
+docs/
+
+# Artefatos de execução
+qrcode.png
+__pycache__/
+*.py[cod]
+
+# Logs e dados locais
+*.log
+backups/

@@ -1,0 +1,91 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "receber-whatsapp",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook Evolution API",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300],
+      "id": "390b6347-7dbd-4bd6-a691-7a621e40f32f",
+      "webhookId": "bf649be6-254e-42c0-9cf8-4c162d6505d8",
+      "notes": "Recebe mensagens do adaptador configurado na rota do webhook e inicia a triagem do assistente."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.OLLAMA_API_URL }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "model", "value": "={{ $env.OLLAMA_MODEL }}" },
+            { "name": "stream", "value": false },
+            { "name": "messages", "value": "={{ [ { role: 'system', content: 'Você é um assistente virtual de atendimento. Seja cordial, claro e objetivo. Explique o escopo do serviço, faça a triagem conforme as regras do projeto, solicite somente os dados necessários e encaminhe para atendimento humano quando aplicável. Não invente informações nem confirme ações que não foram executadas.' }, { role: 'user', content: (($json.body?.data ?? $json.data ?? {}).message?.conversation ?? ($json.body?.data ?? $json.data ?? {}).message?.extendedTextMessage?.text ?? 'Olá') } ] }}" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Gerar Resposta IA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [300, 300],
+      "id": "e7b79714-50da-4978-9d30-e6ea63d82826",
+      "notes": "Envia a mensagem ao endpoint de IA configurado no ambiente e aplica o prompt do projeto."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_SERVER_URL_INTERNAL }}/message/sendText/{{ $env.WHATSAPP_CLIENT_NAME }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ (($('Webhook Evolution API').item.json.body?.data ?? $('Webhook Evolution API').item.json.data ?? {}).key?.remoteJid ?? '').split('@')[0] }}" },
+            { "name": "text", "value": "={{ $json.message.content }}" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Enviar Resposta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [500, 300],
+      "id": "77b2f994-daae-4563-87ef-0685567e1f1e",
+      "notes": "Envia a resposta gerada pela IA ao remetente original pelo adaptador configurado."
+    }
+  ],
+  "connections": {
+    "Webhook Evolution API": {
+      "main": [
+        [
+          {
+            "node": "Gerar Resposta IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Resposta IA": {
+      "main": [
+        [
+          {
+            "node": "Enviar Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
