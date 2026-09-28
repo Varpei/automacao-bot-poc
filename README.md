@@ -38,7 +38,7 @@ README.md
 
 Os seguintes itens são deliberadamente excluídos:
 
-- `.env` e qualquer outro arquivo `.env.*` com exceção de `.env.example`;
+- `.env` e qualquer outro arquivo `.env.*` com exceção de `.env.example` e `.env.documentation`;
 - `docs/`, que contém documentação operacional privada;
 - QR Codes, logs, caches, backups, dumps e dados de mensagens.
 
@@ -175,8 +175,8 @@ Não use `docker compose down -v` como rotina: ele remove volumes e pode apagar 
 
 ```bash
 git status --short
-git check-ignore -v .env .env.documentation docs/
+git check-ignore -v .env docs/
 git grep -n -E 'tre_go_secret|tre_pass|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|api[_-]?key[[:space:]]*[:=]' -- ':!README.md' ':!.env.example' || true
 ```
 
-O resultado esperado é que `.env`, `.env.documentation` e `docs/` sejam ignorados e que a busca não encontre credenciais ou chaves privadas nos arquivos públicos. Revise também manualmente o workflow antes do primeiro `git push`.
+O resultado esperado é que `.env` e `docs/` sejam ignorados, que `.env.documentation` seja publicado e que a busca não encontre credenciais ou chaves privadas nos arquivos públicos. Revise também manualmente o workflow antes do primeiro `git push`.
